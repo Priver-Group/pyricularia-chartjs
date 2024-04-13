@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Crop indices</title>
+    <title>Pyricularia Risk</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -40,7 +40,7 @@
         align-items: center;
         flex-direction: column;
         background: #000000f1;
-        width: 96%;
+        width: 95%;
         height: 90vh;
       }
       canvas {
@@ -78,7 +78,7 @@
   <body>
     <div class="container">
       <div class="text-container">
-        <h1>Indices de Cultivo</h1>
+        <h1>Alerta de riesgo (experimental) de Piricularia usando los datos climáticos de la Estación Meteorológica Virtual más cercana a su siembra.</h1>
       </div>
       <div id="legend-container"></div>
       <div class="canvasDiv">
@@ -86,35 +86,7 @@
       </div>
     </div>
 
-    <script src="crop_indices.js"></script>
-    <script type="text/javascript">
-     document.addEventListener('DOMContentLoaded', () => {
-        const csvUrl = 'climate_service.csv'
-        let data = {}
+    <script src="pyricularia_risk.js"></script>
 
-        Papa.parse(csvUrl, {
-          header: true,
-          download: true,
-          complete: function (results) {
-            data = results.data.map((item) => {
-              const date = new Date(item.datetime)
-              date.setDate(date.getDate() + 1)
-              return {
-                datetime: item.datetime,
-                tempmax: item.tempmax,
-                tempmin: item.tempmin,
-                temp: item.temp,
-                precip: item.precip,
-                windspeed: item.windspeed,
-                windgust: item.windgust,
-                cloudcover: item.cloudcover,
-                solarradiation: item.solarradiation,
-              }
-            })
-            graphic(data)
-          },
-        })
-      })
-    </script>
   </body>
 </html>
