@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const csvUrl = 'pyricularia_service.csv'
+  const csvUrl = 'pyricularia_inference.csv'
   let data = {}
 
   Papa.parse(csvUrl, {
@@ -61,29 +61,49 @@ function graphic(data) {
   const riskData = data.map((item) => item.risk_label)
   console.log(riskData)
 
+  const numericRiskData = riskData.map(risk => parseFloat(risk));
+  console.log(numericRiskData)
+
+  function riskColors(values) {
+    return values.map((value) => {
+      switch (value) {
+        case 0:
+          return '#00AA48';
+        case 1:
+          return '#F7F203';
+        case 2:
+          return '#EB1B12';      
+      }
+    });
+  }
+
   function generateDataset(config) {
     return {
       label: config.label,
       type: config.type,
-      data: data.map((item) => item[config.dataKey]),
-      borderColor: config.color,
-      backgroundColor: config.color,
-      borderWidth: 3,
+      data: data.map((item) => config.dataKey === 'risk_label' ? 100 : item[config.dataKey]),
+      borderColor: config.dataKey === 'risk_label' ? riskColors(numericRiskData) : config.color,
+      backgroundColor: config.dataKey === 'risk_label' ? riskColors(numericRiskData) : config.color,
+      borderWidth: config.dataKey === 'risk_label' || config.dataKey === 'precip' ? 0 : 3,
       categoryPercentage: config.barPercentage,
       barPercentage: config.barPercentage,
+      stack: config.type === 'bar'? true : undefined,
       tension: 0.1,
       pointRadius: (context) => {
         return 0;
       },
       pointHitRadius: 10,
       spanGaps: true,
-      fill: false,
       yAxisID: config.axis,
       borderDash: config.borderDash,
       tooltip: {
         callbacks: {
           label: (context) => {
-            return `${config.label}: ${context.parsed.y.toFixed(2)} ${config.unit}`;
+            if (config.label === ''){
+              return ''
+            } else {
+              return `${config.label}: ${context.parsed.y.toFixed(2)} ${config.unit}`;
+            }
           },
         },
       },
@@ -93,11 +113,12 @@ function graphic(data) {
   const datasets = [
     generateDataset({ label: 'Temperatura', type:'line', dataKey: 'temp', color: '#FF0000', axis:'y1', unit: 'ºC' }),
     generateDataset({ label: 'Vel. de Viento', type:'line', dataKey: 'windspeed', color: '#00FFFF', axis:'y1', unit: 'm/s' }),
-    generateDataset({ label: 'Precipitación', type:'bar', dataKey: 'precip', color: '#2E86C1', axis:'y1', unit: 'mm', barPercentage: '0.6' }),
+    generateDataset({ label: 'Precipitación', type:'bar', dataKey: 'precip', color: '#2E86C1', axis:'y1', unit: 'mm', barPercentage: '1' }),
     generateDataset({ label: 'Hum. en Aire', type:'line', dataKey: 'humidity', color: '#008600', axis:'y1', unit: '%' }),
     generateDataset({ label: 'Riesgo de Pyricularia', type:'line', dataKey: 'risk_level', color: '#FFFFFF', axis:'y2', unit: '% (experimental)' }),
-    generateDataset({ label: '', type:'line', dataKey: 'tempmax', color: '#FF0000', axis:'y1', unit: '', borderDash: [10, 5] }),
-    generateDataset({ label: '', type:'line', dataKey: 'tempmin', color: '#FF0000', axis:'y1', unit: '', borderDash: [10, 5] }),
+    generateDataset({ label: '', type:'bar', dataKey: 'risk_label', color: '#2E86C1', axis:'y2', unit: '', barPercentage: '1' }),
+    generateDataset({ label: '', type:'line', dataKey: 'tempmax', color: '#FF0000', axis:'y1', unit: '', borderDash: [5, 5] }),
+    generateDataset({ label: '', type:'line', dataKey: 'tempmin', color: '#FF0000', axis:'y1', unit: '', borderDash: [5, 5] }),
   ]
   console.log(datasets)
 
@@ -183,10 +204,10 @@ function graphic(data) {
             beginAtZero: true,
             minRotation: window.matchMedia('(max-width: 480px)').matches
               ? 45
-              : 45,
+              : 50,
             maxRotation: window.matchMedia('(max-width: 480px)').matches
               ? 45
-              : 45,
+              : 50,
           },
           grid: {
             display: true,
@@ -276,7 +297,7 @@ const htmlLegendPlugin = {
     )
 
     items.forEach((item) => {
-      if (item.text !== '') {
+      if (item.label !== '') {
         // Check if the label is not empty
         const li = document.createElement('li')
         if (window.matchMedia('(max-width: 480px)').matches) {
