@@ -161,11 +161,26 @@ function graphic(data) {
           position: 'left',
           stack: 'y',
           stacked: false,
-          stackWeight: 0.25,
+          stackWeight: 0.4,
           ticks: {
             stepSize: 50,
             color: textColor,
             beginAtZero: true,
+          },
+          grid: {
+            color: gridColor,
+          },
+        },
+        y: {
+          min: 0,
+          max: 0,
+          position: 'left',
+          stack: 'y',
+          stacked: false,
+          stackWeight: 0.07,
+          ticks: {
+            stepSize: 0,
+            color: textColor,
           },
           grid: {
             color: gridColor,
@@ -178,8 +193,8 @@ function graphic(data) {
           position: 'left',
           stack: 'y',
           stacked: false,
-          stackWeight: 1,
-          offset: true,
+          stackWeight: 1.5,
+          offset: false,
           ticks: {
             stepSize: 10,
             color: textColor,
