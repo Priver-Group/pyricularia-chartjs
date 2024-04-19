@@ -14,7 +14,7 @@
       body {
         background: #000000;
       }
-      .container {
+      #pyricularia-container {
         display: flex;
         justify-content: flex-start;
         align-items: center;
@@ -24,7 +24,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 30px;
       }
       h1 {
         display: flex;
@@ -33,6 +32,8 @@
         color: white;
         font-size: 20px;
         font-family: 'Inter', sans-serif;
+        margin: 10;
+        text-align: center;
       }
       .canvasDiv {
         display: flex;
@@ -41,7 +42,7 @@
         flex-direction: column;
         background: #000000f1;
         width: 95%;
-        height: 90vh;
+        height: calc(100vh - 15vh);
       }
       canvas {
         animation: scale-up-top-left 1s;
@@ -63,8 +64,7 @@
           width: 300px;
         }
         h1 {
-          font-size: 12px;
-          margin: 10px;
+          font-size: 10px;
         }
         .canvasDiv {
           width: 90%;
@@ -74,19 +74,56 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
   </head>
   <body>
-    <div class="container">
-      <div class="text-container">
-        <h1>Alerta de riesgo (experimental) de Piricularia usando los datos climáticos de la Estación Meteorológica Virtual más cercana a su siembra.</h1>
-      </div>
-      <div id="legend-container"></div>
-      <div class="canvasDiv">
-        <canvas class="scale-up-top-left" id="chart"></canvas>
+    <div class="h-100 mw-100 px-0 d-none">
+      <div class="h-100 mw-100 px-0">
+        <div id="pyricularia-container">
+          <div class="text-container">
+            <h1>
+              Alerta de riesgo (experimental) de Piricularia usando los datos
+              climáticos de la Estación Meteorológica Virtual más cercana a su
+              siembra.
+            </h1>
+          </div>
+          <div id="legend-container"></div>
+          <div class="canvasDiv">
+            <canvas class="scale-up-top-left" id="chart"></canvas>
+          </div>
+        </div>
       </div>
     </div>
-
     <script src="pyricularia_risk.js"></script>
-
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', () => {
+        const csvUrl = 'pyricularia_inference.csv'
+        let data = {}
+      
+        Papa.parse(csvUrl, {
+          header: true,
+          download: true,
+          complete: function (results) {
+            data = results.data.map((item) => {
+              const date = new Date(item.datetime)
+              date.setDate(date.getDate() + 1)
+              return {
+                datetime: item.datetime,
+                tempmax: item.tempmax,
+                temp: item.temp,
+                tempmin: item.tempmin,
+                humidity: item.humidity,
+                windspeed: item.windspeed,
+                winddir: item.winddir,
+                precip: item.precip,
+                risk_label: item.risk_label,
+                risk_level: item.risk_level,
+              }
+            })
+            graphic(data)
+          },
+        })
+      })
+    </script>
   </body>
 </html>

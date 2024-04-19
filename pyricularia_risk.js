@@ -1,32 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const csvUrl = 'pyricularia_inference.csv'
-  let data = {}
-
-  Papa.parse(csvUrl, {
-    header: true,
-    download: true,
-    complete: function (results) {
-      data = results.data.map((item) => {
-        const date = new Date(item.datetime)
-        date.setDate(date.getDate() + 1)
-        return {
-          datetime: item.datetime,
-          tempmax: item.tempmax,
-          temp: item.temp,
-          tempmin: item.tempmin,
-          humidity: item.humidity,
-          windspeed: item.windspeed,
-          winddir: item.winddir,
-          precip: item.precip,
-          risk_label: item.risk_label,
-          risk_level: item.risk_level,
-        }
-      })
-      graphic(data)
-    },
-  })
-})
-
 const monthNames = {
   Jan: 'jan',
   Feb: 'feb',
@@ -44,7 +15,7 @@ const monthNames = {
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)
-  date.setDate(date.getDate())
+  date.setDate(date.getDate() + 1)
   return `${date.getDate()} ${
     monthNames[
       date.toLocaleString('en-US', {
@@ -55,26 +26,28 @@ const formatDate = (dateString) => {
 }
 
 function graphic(data) {
-  const labels = data.map((item) => formatDate(item.datetime))
+  const labels = data.filter((item) => item.datetime !== '' && item.datetime !== null).map((item) => formatDate(item.datetime))
   console.log(labels)
 
-  const riskData = data.map((item) => item.risk_label)
+  const riskData = data.filter((item) => item.datetime!== '' && item.datetime !== null).map((item) => item.risk_label)
   console.log(riskData)
 
-  const numericRiskData = riskData.map(risk => parseFloat(risk));
+  const numericRiskData = riskData.map((risk) => parseFloat(risk))
   console.log(numericRiskData)
 
   function riskColors(values) {
     return values.map((value) => {
       switch (value) {
         case 0:
-          return '#00AA48';
+          return '#00AA48'
         case 1:
-          return '#F7F203';
+          return '#00AA48'
         case 2:
-          return '#EB1B12';      
+          return '#F7F203'
+        case 3:
+          return '#EB1B12'
       }
-    });
+    })
   }
 
   function generateDataset(config) {
@@ -85,12 +58,11 @@ function graphic(data) {
       borderColor: config.dataKey === 'risk_label' ? riskColors(numericRiskData) : config.color,
       backgroundColor: config.dataKey === 'risk_label' ? riskColors(numericRiskData) : config.color,
       borderWidth: config.dataKey === 'risk_label' || config.dataKey === 'precip' ? 0 : 3,
-      categoryPercentage: config.barPercentage,
-      barPercentage: config.barPercentage,
-      stack: config.type === 'bar'? true : undefined,
+      categoryPercentage: 0.8,
+      barPercentage: 1,
       tension: 0.1,
       pointRadius: (context) => {
-        return 0;
+        return 0
       },
       pointHitRadius: 10,
       spanGaps: true,
@@ -99,24 +71,43 @@ function graphic(data) {
       tooltip: {
         callbacks: {
           label: (context) => {
-            if (config.label === ''){
+            if (config.label === '') {
               return ''
             } else {
-              return `${config.label}: ${context.parsed.y.toFixed(2)} ${config.unit}`;
+              return `${config.label}: ${context.parsed.y.toFixed(2)} ${config.unit}`
             }
           },
         },
       },
-    };
+      datalabels: {
+        display: config.dataKey === 'windspeed',
+        align: 'center',
+        anchor: 'center',
+        rotation: (context) => data[context.dataIndex].winddir - 90,
+        color: function (context) {
+          return 'white'
+        },
+        font: function (context) {
+          var w = context.chart.width
+          return {
+            size: 12,
+          }
+        },
+        formatter: function (value, context) {
+          // return context.chart.data.labels[context.dataIndex];
+          return '➤'
+        },
+      },
+    }
   }
 
   const datasets = [
     generateDataset({ label: 'Temperatura', type:'line', dataKey: 'temp', color: '#FF0000', axis:'y1', unit: 'ºC' }),
     generateDataset({ label: 'Vel. de Viento', type:'line', dataKey: 'windspeed', color: '#00FFFF', axis:'y1', unit: 'm/s' }),
-    generateDataset({ label: 'Precipitación', type:'bar', dataKey: 'precip', color: '#2E86C1', axis:'y1', unit: 'mm', barPercentage: '1' }),
+    generateDataset({ label: 'Precipitación', type:'bar', dataKey: 'precip', color: '#2E86C1', axis:'y1', unit: 'mm'}),
     generateDataset({ label: 'Hum. en Aire', type:'line', dataKey: 'humidity', color: '#008600', axis:'y1', unit: '%' }),
     generateDataset({ label: 'Riesgo de Pyricularia', type:'line', dataKey: 'risk_level', color: '#FFFFFF', axis:'y2', unit: '% (experimental)' }),
-    generateDataset({ label: '', type:'bar', dataKey: 'risk_label', color: '#2E86C1', axis:'y2', unit: '', barPercentage: '1' }),
+    generateDataset({ label: '', type:'bar', dataKey: 'risk_label', color: '#2E86C1', axis:'y2', unit: ''}),
     generateDataset({ label: '', type:'line', dataKey: 'tempmax', color: '#FF0000', axis:'y1', unit: '', borderDash: [5, 5] }),
     generateDataset({ label: '', type:'line', dataKey: 'tempmin', color: '#FF0000', axis:'y1', unit: '', borderDash: [5, 5] }),
   ]
@@ -169,6 +160,7 @@ function graphic(data) {
           max: 100,
           position: 'left',
           stack: 'y',
+          stacked: false,
           stackWeight: 0.25,
           ticks: {
             stepSize: 50,
@@ -185,6 +177,7 @@ function graphic(data) {
           max: 100,
           position: 'left',
           stack: 'y',
+          stacked: false,
           stackWeight: 1,
           offset: true,
           ticks: {
@@ -197,17 +190,20 @@ function graphic(data) {
           },
         },
         x: {
-          stacked: false,
+          stacked: true,
           offset: false,
           ticks: {
             color: textColor,
+            font: {
+              size: 10,
+            },
             beginAtZero: true,
             minRotation: window.matchMedia('(max-width: 480px)').matches
               ? 45
               : 50,
             maxRotation: window.matchMedia('(max-width: 480px)').matches
               ? 45
-              : 50,
+              : 65,
           },
           grid: {
             display: true,
@@ -240,7 +236,7 @@ function graphic(data) {
         },
       },
     },
-    plugins: [htmlLegendPlugin],
+    plugins: [htmlLegendPlugin, ChartDataLabels],
   }
   const ctx = document.getElementById('chart').getContext('2d')
   new Chart(ctx, config)
@@ -256,9 +252,8 @@ const getOrCreateLegendList = (chart, id) => {
     if (window.matchMedia('(max-width: 480px)').matches) {
       listContainer.classList.add('chartLegend')
       listContainer.style.display = 'grid'
-      listContainer.style.gridTemplateColumns = '170px 170px'
+      listContainer.style.gridTemplateColumns = '140px 140px'
       listContainer.style.gridTemplateRows = '12px 12px 12px'
-      listContainer.style.flexDirection = 'row'
       listContainer.style.margin = 0
       listContainer.style.padding = 0
       listContainer.style.alignItems = 'center'
@@ -297,7 +292,7 @@ const htmlLegendPlugin = {
     )
 
     items.forEach((item) => {
-      if (item.label !== '') {
+      if (item.label !== '' && item.text !== '') {
         // Check if the label is not empty
         const li = document.createElement('li')
         if (window.matchMedia('(max-width: 480px)').matches) {
@@ -308,7 +303,7 @@ const htmlLegendPlugin = {
           li.style.margin = '1px 5px'
           li.style.justifyContent = 'start'
           li.style.height = '12px'
-          li.style.width = '170px'
+          li.style.width = '140px'
           li.style.fontSize = '11px'
           li.style.fontFamily = 'Inter, sans-serif'
         } else {
