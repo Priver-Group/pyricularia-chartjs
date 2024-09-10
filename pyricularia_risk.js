@@ -41,10 +41,8 @@ function graphic(data) {
         case 0:
           return '#00AA48'
         case 1:
-          return '#00AA48'
-        case 2:
           return '#F7F203'
-        case 3:
+        case 2:
           return '#EB1B12'
       }
     })
